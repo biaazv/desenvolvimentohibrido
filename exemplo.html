@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Console de Teste — Firebase Authentication </title>
-
-<!-- Firebase via CDN, SDK "compat": expõe o objeto global `firebase`,
-     igual à sintaxe clássica, sem precisar de import/module -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<link rel="stylesheet" href="style.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Console de Teste — Firebase Authentication</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header>
   <div class="tag">FIREBASE AUTHENTICATION · CONSOLE DE TESTE</div>
-  <h1>Testar cadastro, login e e-mails do Authentication </h1>
+  <h1>Testar cadastro, login e e-mails do Authentication</h1>
 </header>
 
 <div class="layout">
@@ -26,8 +20,7 @@
 
     <div class="card">
       <h2>1. Configuração do Firebase</h2>
-      <p class="hint">Preencha com o firebaseConfig do SEU projeto (Firebase Console &gt; Configurações &gt; Geral &gt; Seus apps). Depois de colar, salve o arquivo e recarregue a página.</p>
-      <p class="hint">O objeto de configuração está definido no início do bloco <code class="small">&lt;script&gt;</code>, no final desta página — procure por <code class="small">firebaseConfig</code>.</p>
+      <p class="hint">Projeto carregado a partir do arquivo <code>firebase-config.js</code>.</p>
     </div>
 
     <div class="card">
@@ -138,26 +131,32 @@
 
 </div>
 
-<script>
-  // ======================================================
-  // 1. COLE AQUI O firebaseConfig DO SEU PROJETO
-  // ======================================================
-    
-    const firebaseConfig = {
-        apiKey: "AIzaSyDXTcedEPeddp8mJpM9KDJvv4yRIopDr78",
-        authDomain: "desenvolvimentohibrido-1a441.firebaseapp.com", 
-        projectId: "desenvolvimentohibrido-1a441",
-        storageBucket: "desenvolvimentohibrido-1a441.firebasestorage.app",
-        messagingSenderId: "684215340936",
-        appId: "1:684215340936:web:8e1b307a1659fa1847343d"
-    };
+<script type="module">
+  import { 
+    app, 
+    auth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut, 
+    sendEmailVerification, 
+    sendPasswordResetEmail, 
+    verifyBeforeUpdateEmail, 
+    updatePassword, 
+    EmailAuthProvider, 
+    reauthenticateWithCredential, 
+    deleteUser,
+    onAuthStateChanged 
+  } from "./firebase-config.js";
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
+  try {
+    const projeto = app.options.projectId;
+    document.querySelector("#status").innerHTML =
+      `<span class="ok">Conectado com sucesso!</span><br>Projeto: ${projeto}`;
+  } catch (erro) {
+    document.querySelector("#status").innerHTML =
+      `<span class="erro">Falha ao conectar.</span><br>${erro.message}`;
+  }
 
-  // ------------------------------------------------------
-  // Console de mensagens
-  // ------------------------------------------------------
   function log(tipo, codigoOuTitulo, detalhe) {
     const box = document.getElementById('console');
     const linha = document.createElement('div');
@@ -172,18 +171,15 @@
     box.prepend(linha);
   }
 
-  function limparConsole() {
-    document.getElementById('console').innerHTML = '';
-  }
-
   function logErro(erro) {
     log('erro', erro.code || 'erro-desconhecido', erro.message);
   }
 
-  // ------------------------------------------------------
-  // Status do usuário logado
-  // ------------------------------------------------------
-  auth.onAuthStateChanged((usuario) => {
+  window.limparConsole = function() {
+    document.getElementById('console').innerHTML = '';
+  };
+
+  onAuthStateChanged(auth, (usuario) => {
     const status = document.getElementById('status');
     if (usuario) {
       status.classList.add('logado');
@@ -197,91 +193,78 @@
     }
   });
 
-  // ------------------------------------------------------
-  // Ações: cadastro e login
-  // ------------------------------------------------------
-  function acaoCadastrar() {
+  window.acaoCadastrar = function() {
     const email = document.getElementById('cadEmail').value;
     const senha = document.getElementById('cadSenha').value;
-    auth.createUserWithEmailAndPassword(email, senha)
-      .then((credencial) => {
-        log('ok', 'Conta criada', 'uid: ' + credencial.user.uid);
-      })
+    createUserWithEmailAndPassword(auth, email, senha)
+      .then((credencial) => log('ok', 'Conta criada', 'uid: ' + credencial.user.uid))
       .catch(logErro);
-  }
+  };
 
-  function acaoLogin() {
+  window.acaoLogin = function() {
     const email = document.getElementById('logEmail').value;
     const senha = document.getElementById('logSenha').value;
-    auth.signInWithEmailAndPassword(email, senha)
-      .then((credencial) => {
-        log('ok', 'Login realizado', 'uid: ' + credencial.user.uid);
-      })
+    signInWithEmailAndPassword(auth, email, senha)
+      .then((credencial) => log('ok', 'Login realizado', 'uid: ' + credencial.user.uid))
       .catch(logErro);
-  }
+  };
 
-  function acaoLogout() {
-    auth.signOut()
+  window.acaoLogout = function() {
+    signOut(auth)
       .then(() => log('ok', 'Logout realizado'))
       .catch(logErro);
-  }
+  };
 
-  // ------------------------------------------------------
-  // Ações: e-mails do Authentication
-  // ------------------------------------------------------
-  function acaoEnviarVerificacao() {
+  window.acaoEnviarVerificacao = function() {
     const usuario = auth.currentUser;
     if (!usuario) { log('erro', 'sem-usuario-logado', 'Faça login antes de testar isto.'); return; }
-    usuario.sendEmailVerification()
+    sendEmailVerification(usuario)
       .then(() => log('ok', 'E-mail de verificação enviado', 'Enviado para: ' + usuario.email))
       .catch(logErro);
-  }
+  };
 
-  function acaoResetSenha() {
+  window.acaoResetSenha = function() {
     const email = document.getElementById('resetEmail').value;
-    auth.sendPasswordResetEmail(email)
+    sendPasswordResetEmail(auth, email)
       .then(() => log('ok', 'E-mail de redefinição enviado', 'Enviado para: ' + email))
       .catch(logErro);
-  }
+  };
 
-  function acaoAtualizarEmail() {
+  window.acaoAtualizarEmail = function() {
     const usuario = auth.currentUser;
     const novoEmail = document.getElementById('novoEmail').value;
     if (!usuario) { log('erro', 'sem-usuario-logado', 'Faça login antes de testar isto.'); return; }
-    usuario.verifyBeforeUpdateEmail(novoEmail)
+    verifyBeforeUpdateEmail(usuario, novoEmail)
       .then(() => log('ok', 'Confirmação enviada ao novo e-mail', 'Enviado para: ' + novoEmail))
       .catch(logErro);
-  }
+  };
 
-  function acaoAtualizarSenha() {
+  window.acaoAtualizarSenha = function() {
     const usuario = auth.currentUser;
     const novaSenha = document.getElementById('novaSenha').value;
     if (!usuario) { log('erro', 'sem-usuario-logado', 'Faça login antes de testar isto.'); return; }
-    usuario.updatePassword(novaSenha)
+    updatePassword(usuario, novaSenha)
       .then(() => log('ok', 'Senha atualizada com sucesso'))
       .catch(logErro);
-  }
+  };
 
-  // ------------------------------------------------------
-  // Ações: reautenticação e exclusão
-  // ------------------------------------------------------
-  function acaoReautenticar() {
+  window.acaoReautenticar = function() {
     const usuario = auth.currentUser;
     const senha = document.getElementById('reautSenha').value;
     if (!usuario) { log('erro', 'sem-usuario-logado', 'Faça login antes de testar isto.'); return; }
-    const credencial = firebase.auth.EmailAuthProvider.credential(usuario.email, senha);
-    usuario.reauthenticateWithCredential(credencial)
+    const credencial = EmailAuthProvider.credential(usuario.email, senha);
+    reauthenticateWithCredential(usuario, credencial)
       .then(() => log('ok', 'Reautenticação concluída', 'Agora repita a ação que exigia login recente.'))
       .catch(logErro);
-  }
+  };
 
-  function acaoExcluirConta() {
+  window.acaoExcluirConta = function() {
     const usuario = auth.currentUser;
     if (!usuario) { log('erro', 'sem-usuario-logado', 'Faça login antes de testar isto.'); return; }
-    usuario.delete()
+    deleteUser(usuario)
       .then(() => log('ok', 'Conta excluída com sucesso'))
       .catch(logErro);
-  }
+  };
 </script>
 
 </body>

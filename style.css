@@ -103,3 +103,29 @@
   table.cheatsheet th, table.cheatsheet td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--border); }
   table.cheatsheet th { color: var(--muted); font-weight: 600; }
   code.small { background: #EEF3F7; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  /* ============================================================
+   ESTILOS DE INICIALIZAÇÃO / PÁGINA INICIAL
+   ============================================================ */
+.status-card {
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #f4f7fb;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.btn-login {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #ffa000;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.btn-login:hover {
+  background-color: #e69100;
+}
